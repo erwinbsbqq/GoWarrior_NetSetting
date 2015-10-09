@@ -1,0 +1,54 @@
+<resources>
+    <string name="app_name">NetSetting</string>
+    <string name="title_net_setting_wlan">Wireless Setting</string>
+    <string name="title_net_setting_lan">Ethernet Setting</string>
+    <string name="title_net_setting_add_ssid">Add wireless network</string>
+
+    <string name="label_net_setting_wlan_scan_wifi">Scan WiFi</string>
+    <string name="label_net_setting_add_ssid">Add SSID</string>
+    <string name="label_net_setting_action_connect">Connect</string>
+    <string name="label_net_setting_action_scan">Scan</string>
+    <string name="label_net_setting_mmmxxx">MMMXXX</string>
+    <string name="label_net_setting_ip">IP Address:</string>
+    <string name="label_net_setting_mask">Subnet Mask:</string>
+    <string name="label_net_setting_gateway">Default Gateway:</string>
+    <string name="label_net_setting_dns">DNS Server:</string>
+    <string name="label_net_setting_wifi_password">Password: </string>
+    <string name="label_net_setting_ssid_label">SSID: </string>
+    <string name="label_net_setting_action_manual_connect">Manual</string>
+    <string name="label_net_setting_action_dial_connect">Dial-Up</string>
+    <string name="label_net_setting_action_auto_connect">Auto</string>
+    <string name="label_net_setting_password">Password:</string>
+    <string name="label_net_setting_account">Account:</string>
+    <string name="label_net_setting_action_next">Next</string>
+    <string name="label_net_setting_action_ok">OK</string>
+    <string name="label_net_setting_action_gotowlan">WiFi</string>
+    <string name="label_net_setting_action_gotolan">Ethernet</string>
+
+    <string name="msg_net_setting_wifi_connected_redirect_tips">seconds to return to main interface</string>
+    <string name="msg_net_setting_wifi_remove">Remove Saved</string>
+    <string name="msg_net_setting_wifi_connected_success_tips">Successfully connected to</string>
+    <string name="msg_net_setting_ethernet_connected">Ethernet Connected</string>
+    <string name="msg_net_setting_ssid_not_found">Not Found</string>
+    <string name="msg_net_setting_ssid_need_password">Fill Password</string>
+    <string name="msg_net_setting_connect_ok">Connection OK</string>
+    <string name="msg_net_setting_connect_failed">Connection Failure</string>
+    <string name="msg_net_setting_wifi_connecting">Connecting&#8230;</string>
+    <string name="msg_net_setting_ssid_need_ssid">Input SSID</string>
+    <string name="msg_net_setting_confirm_resolution">Wish to save this resolution?</string>
+    <string name="msg_net_setting_wlan_tip">Tips:Refresh automatically after stop moving for 5 seconds</string>
+    <string name="msg_net_setting_wlan_scanning">Scanning&#8230;</string>
+    <string name="msg_net_setting_wifi_auth_error">Password Error</string>
+    <string name="msg_net_setting_wifi_password_tip">WiFi Password</string>
+    <string name="msg_net_setting_ssid_tip">SSID</string>
+    <string name="msg_net_setting_ssid_no_password">Blank</string>
+    <string name="msg_net_setting_lan_pppoe_account">PPPoE Account</string>
+    <string name="msg_net_setting_lan_pppoe_password">PPPoE Password</string>
+    <string name="msg_net_setting_lan_auto_connecting">Getting IP automatically&#8230;</string>
+    <string name="msg_net_setting_lan_manual_connecting">Setting IP manually&#8230;</string>
+    <string name="msg_net_setting_lan_dial_connecting">Setting dial-up connection&#8230;</string>
+
+    <string name="value_net_setting_ip_default">192.168.0.111</string>
+    <string name="value_net_setting_mask_default">255.255.255.0</string>
+    <string name="value_net_setting_gateway_default">192.168.0.1</string>
+</resources>

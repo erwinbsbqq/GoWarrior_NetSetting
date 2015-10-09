@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/net_setting_lan_view" style="@style/LanLayout">
+
+    <TextView
+        android:id="@+id/net_setting_lan_ip"
+        style="@style/LanTextContent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="340px"
+        android:layout_marginTop="72px"
+        android:text="@string/value_net_setting_ip_default" />
+
+    <TextView
+        android:id="@+id/net_setting_lan_mask"
+        style="@style/LanTextContent"
+        android:layout_alignLeft="@id/net_setting_lan_ip"
+        android:layout_alignRight="@id/net_setting_lan_ip"
+        android:layout_below="@id/net_setting_lan_ip"
+        android:layout_marginTop="16px"
+        android:text="@string/value_net_setting_mask_default" />
+
+    <TextView
+        android:id="@+id/net_setting_lan_gateway"
+        style="@style/LanTextContent"
+        android:layout_alignLeft="@id/net_setting_lan_ip"
+        android:layout_alignRight="@id/net_setting_lan_ip"
+        android:layout_below="@id/net_setting_lan_mask"
+        android:layout_marginTop="16px"
+        android:text="@string/value_net_setting_gateway_default" />
+
+    <TextView
+        android:id="@+id/net_setting_lan_dns"
+        style="@style/LanTextContent"
+        android:layout_alignLeft="@id/net_setting_lan_ip"
+        android:layout_alignRight="@id/net_setting_lan_ip"
+        android:layout_below="@id/net_setting_lan_gateway"
+        android:layout_marginTop="16px"
+        android:text="@string/value_net_setting_gateway_default" />
+
+    <TextView
+        android:id="@+id/net_setting_lan_label_ip"
+        style="@style/LanTextLabel"
+        android:layout_width="250px"
+        android:layout_height="50px"
+        android:layout_alignBottom="@id/net_setting_lan_ip"
+        android:layout_alignTop="@id/net_setting_lan_ip"
+        android:layout_marginLeft="100px"
+        android:text="@string/label_net_setting_ip" />
+
+    <TextView
+        android:id="@+id/setting_lan_label_mask"
+        style="@style/LanTextLabel"
+        android:layout_alignBottom="@id/net_setting_lan_mask"
+        android:layout_alignLeft="@id/net_setting_lan_label_ip"
+        android:layout_alignRight="@id/net_setting_lan_label_ip"
+        android:layout_alignTop="@id/net_setting_lan_mask"
+        android:text="@string/label_net_setting_mask" />
+
+    <TextView
+        android:id="@+id/setting_lan_label_gateway"
+        style="@style/LanTextLabel"
+        android:layout_alignBottom="@+id/net_setting_lan_gateway"
+        android:layout_alignLeft="@id/net_setting_lan_label_ip"
+        android:layout_alignRight="@id/net_setting_lan_label_ip"
+        android:layout_alignTop="@+id/net_setting_lan_gateway"
+        android:text="@string/label_net_setting_gateway" />
+
+    <TextView
+        android:id="@+id/setting_lan_label_dns"
+        style="@style/LanTextLabel"
+        android:layout_alignBottom="@id/net_setting_lan_dns"
+        android:layout_alignLeft="@id/net_setting_lan_label_ip"
+        android:layout_alignRight="@id/net_setting_lan_label_ip"
+        android:layout_alignTop="@id/net_setting_lan_dns"
+        android:text="@string/label_net_setting_dns" />
+
+    <TextView
+        android:id="@+id/net_setting_lan_message"
+        style="@style/LanTextMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="40px"
+        android:layout_below="@id/net_setting_lan_dns"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10px" />
+
+    <LinearLayout
+        android:id="@+id/net_setting_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/net_setting_lan_message"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/net_setting_lan_auto"
+            style="@style/Button1"
+            android:layout_width="160px"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:text="@string/label_net_setting_action_auto_connect">
+            <requestFocus />
+        </Button>
+
+        <Button
+            android:id="@+id/net_setting_lan_manual"
+            style="@style/Button1"
+            android:layout_width="160px"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:text="@string/label_net_setting_action_manual_connect" />
+
+        <Button
+            android:id="@+id/net_setting_lan_dial"
+            style="@style/Button1"
+            android:layout_width="160px"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:text="@string/label_net_setting_action_dial_connect"
+            android:visibility="visible" />
+
+        <Button
+            android:id="@+id/net_setting_lan_towlan"
+            style="@style/Button1"
+            android:layout_width="160px"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:text="@string/label_net_setting_action_gotowlan"
+            android:visibility="visible" />
+
+    </LinearLayout>
+
+</RelativeLayout>

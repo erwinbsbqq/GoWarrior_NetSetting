@@ -1,0 +1,83 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme">
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="Button1">
+        <item name="android:layout_width">218px</item>
+        <item name="android:layout_height">72px</item>
+        <item name="android:background">@drawable/button_1</item>
+        <item name="android:paddingBottom">18px</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">30px</item>
+    </style>
+
+    <style name="Button2">
+        <item name="android:layout_width">140px</item>
+        <item name="android:layout_height">72px</item>
+        <item name="android:background">@drawable/button_2</item>
+        <item name="android:paddingBottom">20px</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">30px</item>
+    </style>
+
+    <style name="LanLayout">
+        <item name="android:layout_width">798px</item>
+        <item name="android:layout_height">460px</item>
+        <item name="android:layout_alignParentTop">true</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:layout_marginTop">140px</item>
+    </style>
+
+    <style name="LanTextView">
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textColor">#80FFFFFF</item>
+        <item name="android:textSize">30px</item>
+    </style>
+
+    <style name="LanTextContent" parent="LanTextView">
+        <item name="android:layout_width">330px</item>
+        <item name="android:layout_height">50px</item>
+        <item name="android:paddingLeft">30px</item>
+        <item name="android:background">@drawable/net_setting_ip_bar</item>
+    </style>
+
+    <style name="LanTextLabel" parent="LanTextView">
+        <item name="android:layout_width">170px</item>
+        <item name="android:layout_height">50px</item>
+    </style>
+
+    <style name="LanTextMessage">
+        <item name="android:gravity">center</item>
+        <item name="android:layout_height">40px</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">30px</item>
+    </style>
+
+    <style name="DigitWheelView">
+        <item name="android:layout_width">35px</item>
+        <item name="android:layout_height">52px</item>
+        <item name="android:layout_centerVertical">true</item>
+    </style>
+
+    <style name="SettingDialog" parent="android:Theme.Dialog">
+        <!-- rim -->
+        <item name="android:windowFrame">@null</item>
+        <!-- above of activity or not -->
+        <item name="android:windowIsFloating">true</item>
+        <!-- transparent -->
+        <item name="android:windowIsTranslucent">false</item>
+        <!-- No title -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- background color -->
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- background dim or not -->
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+</resources>

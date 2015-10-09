@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="DialogTheme">
+        <item name="android:cacheColorHint">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/dialogBackground</item>
+    </style>
+
+    <style name="SmallDialog">
+        <item name="android:layout_width">580px</item>
+        <item name="android:layout_height">480px</item>
+    </style>
+
+    <style name="BigDialog">
+        <item name="android:layout_width">880px</item>
+        <item name="android:layout_height">580px</item>
+    </style>
+
+    <style name="Button5">
+        <item name="android:layout_width">300px</item>
+        <item name="android:layout_height">60px</item>
+        <item name="android:background">@drawable/button_5</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">38px</item>
+    </style>
+
+    <color name="dialogBackground">#CC000000</color>
+</resources>

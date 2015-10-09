@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/dialog_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="200px"
+        android:gravity="center_vertical"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="40px"
+        android:layout_marginTop="28px"
+        android:layout_marginBottom="10px"
+        android:layout_marginRight="36px"
+        android:textColor="@android:color/white"
+        android:textSize="38px"/>
+
+    <RelativeLayout
+        android:id="@+id/dialog_button_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="true"
+        android:padding="8px">
+
+        <Button
+            android:id="@+id/dialog_button_1"
+            style="@style/Button5"
+            android:layout_centerVertical="true"
+            android:text="@string/action_ok" >
+        </Button>
+
+        <Button
+            android:id="@+id/dialog_button_2"
+            style="@style/Button5"
+            android:layout_centerVertical="true"
+            android:text="@string/action_cancel"
+            android:layout_toRightOf="@+id/dialog_button_1">
+        </Button>
+
+        <Button
+            android:id="@+id/dialog_button_3"
+            style="@style/Button5"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/dialog_button_2">
+        </Button>
+
+    </RelativeLayout>
+
+</merge>

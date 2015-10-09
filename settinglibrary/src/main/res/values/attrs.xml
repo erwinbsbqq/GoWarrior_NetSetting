@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="UnityEditText">
+        <attr name="label" format="reference|string"/>
+        <attr name="labelTextColor" format="reference|color"/>
+        <attr name="hint" format="reference|string"/>
+        <attr name="hintTextColor" format="reference|color"/>
+        <attr name="password" format="boolean"/>
+        <attr name="singleLine" format="boolean"/>
+        <attr name="text" format="reference|string"/>
+        <attr name="textColor" format="reference|color"/>
+        <attr name="textSize" format="dimension"/>
+    </declare-styleable>
+
+</resources>
