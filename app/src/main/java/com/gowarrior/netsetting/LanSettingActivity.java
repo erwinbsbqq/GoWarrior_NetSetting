@@ -1,14 +1,26 @@
 package com.gowarrior.netsetting;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.DhcpInfo;
+import android.net.NetworkInfo;
+import android.net.ethernet.EthernetDevInfo;
+import android.net.ethernet.EthernetManager;
+import android.net.pppoe.PppoeManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AnticipateOvershootInterpolator;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -17,6 +29,7 @@ import com.gowarrior.settinglibrary.UnityEditText;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 
 import lib.widget.wheel.adapters.NumericWheelAdapter;
 import lib.widget.wheel.OnWheelChangedListener;
@@ -34,7 +47,21 @@ public class LanSettingActivity extends Activity {
     private final static int ID_ADDRESS_GATEWAY = 2;
     private final static int ID_ADDRESS_DNS = 3;
     private final static int NUM_OF_ID_ADDRESS = 4;
+    private final String DEFAULT_ETH_DEV = "eth0";
+    private final static String FIXED_IP_INFO = "FIXED_IP_INFO";
+    private final static String FIXED_IP = "IP";
+    private final static String FIXED_MASK = "MASK";
+    private final static String FIXED_GATEWAY = "GATEWAY";
+    private final static String FIXED_DNS = "DNS";
+    private final static String PPPOE_INFO = "PPPOE_INFO";
+    private final static String PPPOE_ACCOUNT = "ACCOUNT";
+    private final static String PPPOE_PASSWORD = "PASSWORD";
     private InetAddress[] mAddress = new InetAddress[NUM_OF_ID_ADDRESS];
+
+    private boolean mModeDhcp = false;
+    private ConnectivityManager mConnectivityManager;
+    private EthernetManager mEthernetManager = null;
+    private PppoeManager mPppoeManager = null;
 
     private Context mContext;
     private MainScene mMainScene;
@@ -47,16 +74,25 @@ public class LanSettingActivity extends Activity {
 
         setContentView(R.layout.net_setting_lan);
 
+        mConnectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        mEthernetManager = (EthernetManager) getSystemService(Context.ETHERNET_SERVICE);
+        mPppoeManager = (PppoeManager) getSystemService(Context.PPPOE_SERVICE);
+
         mContext = this;
         mMainScene = new MainScene();
         mManualScene = new ManualScene();
         mDialScene = new DialScene();
         mMainScene.show();
+
+        registBR();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (null != mSystemBroadcastReceiver) {
+            unregisterReceiver(mSystemBroadcastReceiver);
+        }
     }
 
     @Override
@@ -106,6 +142,8 @@ public class LanSettingActivity extends Activity {
         private final static String LOGTAG = "MainScene";
 
         private Button mFocusButton;
+        private TextView mMessage;
+        private Handler mHandler;
         private int[] mTextIds = {
                 R.id.net_setting_lan_ip,
                 R.id.net_setting_lan_mask,
@@ -126,6 +164,8 @@ public class LanSettingActivity extends Activity {
             button = (Button)findViewById(R.id.net_setting_lan_auto);
             button.setOnClickListener(this);
             mFocusButton = button;
+            mMessage = (TextView) findViewById(R.id.net_setting_lan_message);
+            mHandler = new Handler();
 
             getIpInfo();
             updateIpInfo();
@@ -136,6 +176,7 @@ public class LanSettingActivity extends Activity {
             mFocusButton = (Button)v;
             switch (v.getId()) {
                 case R.id.net_setting_lan_auto:
+                    doAutoConnect();
                     break;
                 case R.id.net_setting_lan_manual:
                     mMainScene.hide();
@@ -146,6 +187,9 @@ public class LanSettingActivity extends Activity {
                     mDialScene.show();
                     break;
                 case R.id.net_setting_lan_towlan:
+                    Intent mIntent = new Intent();
+                    mIntent.setAction("android.net.wifi.PICK_WIFI_NETWORK");
+                    startActivity(mIntent);
                     break;
                 default:
                     break;
@@ -168,6 +212,56 @@ public class LanSettingActivity extends Activity {
                 }
             }
         }
+
+        public void updateMessage(int strId) {
+            mMessage.setText(strId);
+
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (mModeDhcp) {
+                        getIpInfo();
+                    }
+                    updateIpInfo();
+                    NetworkInfo.State stateEthernet = null;
+                    NetworkInfo.State statePppoe = null;
+
+                    try {
+                        stateEthernet = mConnectivityManager.getNetworkInfo(
+                                ConnectivityManager.TYPE_ETHERNET).getState();
+                        if (null != stateEthernet) {
+                            Log.v(LOGTAG, "Ethernet state = " + stateEthernet);
+                        }
+                    } catch (Exception e) {
+                        Log.v(LOGTAG, "ConnectivityManager.getState TYPE_ETHERNET Exception!");
+                    }
+
+                    try {
+                        statePppoe = mConnectivityManager.getNetworkInfo(
+                                ConnectivityManager.TYPE_PPPOE).getState();
+                        if (null != statePppoe) {
+                            Log.v(LOGTAG, "PPPoE state = " + statePppoe);
+                        }
+                    } catch (Exception e) {
+                        Log.v(LOGTAG, "ConnectivityManager.getState TYPE_PPPOE Exception!");
+                    }
+
+                    if ((null != stateEthernet && NetworkInfo.State.CONNECTED == stateEthernet)
+                            || (null != statePppoe && NetworkInfo.State.CONNECTED == statePppoe)) {
+                        mMessage.setText(R.string.msg_net_setting_connect_ok);
+                    } else {
+                        mMessage.setText(R.string.msg_net_setting_connect_failed);
+                    }
+
+                    mHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mMessage.setText("");
+                        }
+                    }, 1000);
+                }
+            }, 5000);
+        }
     }
 
     private class ManualScene extends Scene implements
@@ -185,6 +279,8 @@ public class LanSettingActivity extends Activity {
         private WheelView mFocusWheel;
         private TextView mTitle;
         private InetAddress[] mDefaultAddress;
+        private SharedPreferences mManualSp = getSharedPreferences(FIXED_IP_INFO, Activity.MODE_PRIVATE);
+        private SharedPreferences.Editor mManualSpEditor = mManualSp.edit();
         private int[] mTitleIds = {
                 R.string.label_net_setting_ip,
                 R.string.label_net_setting_mask,
@@ -209,10 +305,10 @@ public class LanSettingActivity extends Activity {
         public ManualScene() {
             super(R.id.net_setting_lan_manual_view);
 
-            String ip = "192.168.1.101";
-            String mask = "255.255.255.0";
-            String route = "192.168.1.1";
-            String dns = "192.168.1.1";
+            String ip = mManualSp.getString(FIXED_IP, "192.168.1.101");
+            String mask = mManualSp.getString(FIXED_MASK, "255.255.255.0");
+            String route = mManualSp.getString(FIXED_GATEWAY, "192.168.1.1");
+            String dns = mManualSp.getString(FIXED_DNS, "192.168.1.1");
             mDefaultAddress = new InetAddress[NUM_OF_ID_ADDRESS];
 
             try {
@@ -288,6 +384,16 @@ public class LanSettingActivity extends Activity {
             } else {
                 super.hide();
                 mMainScene.show();
+                mManualSpEditor.putString(FIXED_IP,
+                        mAddress[ID_ADDRESS_IP].getHostAddress());
+                mManualSpEditor.putString(FIXED_MASK,
+                        mAddress[ID_ADDRESS_MASK].getHostAddress());
+                mManualSpEditor.putString(FIXED_GATEWAY,
+                        mAddress[ID_ADDRESS_GATEWAY].getHostAddress());
+                mManualSpEditor.putString(FIXED_DNS,
+                        mAddress[ID_ADDRESS_DNS].getHostAddress());
+                mManualSpEditor.commit();
+                doManualConnect();
             }
         }
 
@@ -461,6 +567,43 @@ public class LanSettingActivity extends Activity {
         private UnityEditText mPassword;
         private Button mButton;
         private TextView mStateTextView;
+        private Handler mHandler = new Handler();
+        private SharedPreferences mPppoeSp = getSharedPreferences(PPPOE_INFO, Activity.MODE_PRIVATE);
+        private SharedPreferences.Editor mPppoeSpEditor = mPppoeSp.edit();
+        private Runnable mExitRunnable = new Runnable() {
+            @Override
+            public void run() {
+                mPassword.hideKeyboard();
+                hide();
+                mMainScene.show();
+                getIpInfo();
+                mMainScene.updateIpInfo();
+            }
+        };
+        private Runnable mRunnable = new Runnable() {
+            @Override
+            public void run() {
+                int statePppoe = -1;
+                try {
+                    statePppoe = mPppoeManager.getPppoeState();
+                } catch (Exception e) {
+                    Log.v(LOGTAG, "ConnectivityManager.getState TYPE_PPPOE Exception!");
+                }
+                if (PppoeManager.PPPOE_STATE_CONNECT == statePppoe) {
+                    mStateTextView.setText(R.string.msg_net_setting_connect_ok);
+                    mHandler.removeCallbacks(mTimeoutRunnable);
+                    mHandler.postDelayed(mExitRunnable, 2000);
+                } else {
+                    mStateTextView.setText(R.string.msg_net_setting_connect_failed);
+                }
+            }
+        };
+        private Runnable mTimeoutRunnable = new Runnable() {
+            @Override
+            public void run() {
+                connectFinished();
+            }
+        };
 
         public DialScene() {
             super(R.id.net_setting_lan_dial_view);
@@ -472,16 +615,43 @@ public class LanSettingActivity extends Activity {
             mButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    if (!mAccount.getText().isEmpty() && !mPassword.getText().isEmpty()) {
+                        mPppoeSpEditor.putString(PPPOE_ACCOUNT, mAccount.getText());
+                        mPppoeSpEditor.putString(PPPOE_PASSWORD, mPassword.getText());
+                        mPppoeSpEditor.commit();
+                        doDialConnect();
+                    }
                 }
             });
             mPassword.setOnEditorActionListener(mOnEditorActionListener);
+            mAccount.setText(mPppoeSp.getString(PPPOE_ACCOUNT, ""));
+            mPassword.setText(mPppoeSp.getString(PPPOE_PASSWORD, ""));
         }
 
         UnityEditText.OnEditorActionListener mOnEditorActionListener = new UnityEditText.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(UnityEditText view, int actionId, KeyEvent event) {
                 Log.v(LOGTAG, "onEditorAction: id=" + view.getId() + " action=" + actionId);
+                switch (view.getId()) {
+                    case R.id.net_setting_lan_dial_account:
+                        break;
+                    case R.id.net_setting_lan_dial_password:
+                        if (actionId == EditorInfo.IME_ACTION_DONE
+                                || actionId == EditorInfo.IME_ACTION_GO
+                                || actionId == EditorInfo.IME_ACTION_NEXT
+                                || actionId == EditorInfo.IME_ACTION_UNSPECIFIED
+                                || actionId == EditorInfo.IME_ACTION_SEND) {
+                            mPassword.hideKeyboard();
+                            if (!mAccount.getText().isEmpty() && !mPassword.getText().isEmpty()) {
+                                mPppoeSpEditor.putString(PPPOE_ACCOUNT, mAccount.getText());
+                                mPppoeSpEditor.putString(PPPOE_PASSWORD, mPassword.getText());
+                                mPppoeSpEditor.commit();
+                                doDialConnect();
+                            }
+                            return true;
+                        }
+                        break;
+                }
                 return false;
             }
         };
@@ -496,6 +666,46 @@ public class LanSettingActivity extends Activity {
                 mButton.requestFocus();
             }
         }
+
+        private void connectFinished() {
+            mHandler.removeCallbacks(mRunnable);
+            mHandler.post(mRunnable);
+        }
+
+        public void doDialConnect() {
+            mStateTextView.setText(R.string.msg_net_setting_lan_dial_connecting);
+            String name = mPppoeManager.getDatabaseInterfaceName();
+            Log.v(LOGTAG, "pppoe InterfaceName=" + name);
+            mEthernetManager.stopEthernet();
+            String account = mAccount.getText();
+            String password = mPassword.getText();
+            try {
+                Log.v(LOGTAG, "pppoe connect " + account + " " + password + " "
+                        + name);
+                mPppoeManager.connect(account, password, name);
+            } catch (Exception e) {
+                Log.v(LOGTAG, "pppoe connect Exception");
+            }
+            Log.v(LOGTAG, "pppoe connect begin ...");
+            mModeDhcp = false;
+            mHandler.postDelayed(mTimeoutRunnable, 30 * 1000);
+        }
+
+        public void pppoeStateChanged(Intent intent) {
+            int extra = intent.getIntExtra(PppoeManager.EXTRA_PPPOE_STATE, -1);
+            Log.v(LOGTAG, "EXTRA_PPPOE_STATE=" + extra);
+            switch (extra) {
+                case 0:
+                case 1:
+                    connectFinished();
+                    break;
+                case 2:
+                    mStateTextView.setText(R.string.msg_net_setting_wifi_auth_error);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     /**
@@ -506,11 +716,67 @@ public class LanSettingActivity extends Activity {
         String mask = "255.255.255.0";
         String route = "192.168.1.1";
         String dns = "192.168.1.1";
+        NetworkInfo mNetworkInfos[] = mConnectivityManager.getAllNetworkInfo();
+
+        for (int i = 0; i < mNetworkInfos.length; i++) {
+            Log.v(LOGTAG, "NetworkInfo[" + i +"] = " + mNetworkInfos[i].toString());
+        }
 
         mAddress[ID_ADDRESS_IP] = null;
         mAddress[ID_ADDRESS_MASK] = null;
         mAddress[ID_ADDRESS_GATEWAY] = null;
         mAddress[ID_ADDRESS_DNS] = null;
+        NetworkInfo.State stateEthernet = null;
+        NetworkInfo.State statePppoe = null;
+
+        try {
+            stateEthernet = mConnectivityManager.getNetworkInfo(
+                    ConnectivityManager.TYPE_ETHERNET).getState();
+            if (null == stateEthernet) {
+                Log.v(LOGTAG, "Ethernet state = " + stateEthernet);
+            }
+        } catch (Exception e) {
+            Log.v(LOGTAG, "ConnectivityManager.getState TYPE_PPPOE Exception!");
+        }
+
+        try {
+            statePppoe = mConnectivityManager.getNetworkInfo(
+                    ConnectivityManager.TYPE_PPPOE).getState();
+            if (statePppoe != null) {
+                Log.v(LOGTAG, "PPPoE state = " + statePppoe);
+            }
+        } catch (Exception e) {
+            Log.v(LOGTAG, "ConnectivityManager.getState TYPE_PPPOE Exception!");
+        }
+
+        if(null != statePppoe && NetworkInfo.State.CONNECTED == statePppoe) {
+            DhcpInfo dhcpInfo = mPppoeManager.getDhcpInfo();
+            ip = intToIp(dhcpInfo.ipAddress);
+            mask = intToIp(dhcpInfo.netmask);
+            route = intToIp(dhcpInfo.gateway);
+            dns = intToIp(dhcpInfo.dns1);
+        } else if (null != stateEthernet && NetworkInfo.State.CONNECTED == stateEthernet) {
+            EthernetDevInfo info = null;
+            try {
+                info = mEthernetManager.getEthernetDevInfo();
+            } catch (Exception e) {
+                Log.e(LOGTAG, "getEthernetDevInfo error");
+            }
+            if(null != info) {
+                ip = info.getIpAddress();
+                mask = info.getNetMask();
+                route = info.getRouteAddr();
+                dns = info.getDnsAddr();
+                if (EthernetDevInfo.ETHERNET_CONN_MODE_DHCP == info.getConnectMode()) {
+                    mModeDhcp = true;
+                } else {
+                    mModeDhcp = false;
+                }
+            }
+        } else {
+            Log.v(LOGTAG, "Get lan IP info fail.");
+            return;
+        }
 
         Log.i(LOGTAG, "ip: " + ip);
         Log.i(LOGTAG, "mask: " + mask);
@@ -526,5 +792,130 @@ public class LanSettingActivity extends Activity {
             Log.v(LOGTAG, "Lan UnknownHost Exception.");
             return;
         }
+    }
+
+    public String intToIp(int addr) {
+        return ((addr & 0xFF) + "." + ((addr >>>=8 ) & 0xFF) + "."
+                + ((addr >>>=8 ) & 0xFF) + "." + ((addr >>>=8 ) & 0xFF));
+    }
+
+    /**
+     * DHCP connect
+     */
+    public void doAutoConnect() {
+        Log.i(LOGTAG, "Lan doAutoConnect");
+
+        EthernetDevInfo info = new EthernetDevInfo();
+        String[] ethernetDev = mEthernetManager.getDeviceNameList();
+
+        if (ethernetDev != null && ethernetDev.length >= 1) {
+            Log.i(LOGTAG, "get ethernet devices num: " + ethernetDev.length
+                    + ", selected: " + ethernetDev[0]);
+            info.setIfName(ethernetDev[0]);
+        } else {
+            Log.w(LOGTAG, "can not get ethernet devices, use default");
+            info.setIfName(DEFAULT_ETH_DEV);
+        }
+        info.setConnectMode(EthernetDevInfo.ETHERNET_CONN_MODE_DHCP);
+        info.setIpAddress(null);
+        info.setNetMask(null);
+        info.setRouteAddr(null);
+        info.setDnsAddr(null);
+        mEthernetManager.updateDevInfo(info);
+        Log.i(LOGTAG, "start ethernet with dhcp mode");
+        mEthernetManager.startEthernet();
+
+        // TODO: show connecting message
+        mMainScene.updateMessage(R.string.msg_net_setting_lan_auto_connecting);
+        mModeDhcp = true;
+    }
+
+    /**
+     * manual connect
+     */
+    public void doManualConnect() {
+        Log.i(LOGTAG, "Lan doManualConnect");
+
+        mMainScene.updateIpInfo();
+        EthernetDevInfo info = new EthernetDevInfo();
+        String[] ethernetDev = mEthernetManager.getDeviceNameList();
+
+        if (ethernetDev != null && ethernetDev.length >= 1) {
+            Log.w(LOGTAG, "get ethernet devices num: " + ethernetDev.length
+                    + ",selected: " + ethernetDev[0]);
+            info.setIfName(ethernetDev[0]);
+        } else {
+            Log.w(LOGTAG, "can not get ethernet devices, use default");
+            info.setIfName(DEFAULT_ETH_DEV);
+        }
+
+        info.setConnectMode(EthernetDevInfo.ETHERNET_CONN_MODE_MANUAL);
+        info.setIpAddress(mAddress[0].getHostAddress());
+        info.setNetMask(mAddress[1].getHostAddress());
+        info.setRouteAddr(mAddress[2].getHostAddress());
+        info.setDnsAddr(mAddress[3].getHostAddress());
+        mEthernetManager.updateDevInfo(info);
+        Log.i(LOGTAG, "start ethernet with manual mode");
+        mEthernetManager.startEthernet();
+
+        // TODO: show connecting message
+        mMainScene.updateMessage(R.string.msg_net_setting_lan_manual_connecting);
+        mModeDhcp = false;
+    }
+
+    private BroadcastReceiver mSystemBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            NetworkInfo activeNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
+            if (null != activeNetworkInfo) {
+                Log.v(LOGTAG, "ActiveNetworkInfo=" + activeNetworkInfo.toString());
+                Log.v(LOGTAG, "ActiveNetwork SubtypeName=" + activeNetworkInfo.getSubtypeName()
+                        + " state=" + activeNetworkInfo.getDetailedState());
+            } else {
+                Log.v(LOGTAG, "No network is active!");
+            }
+            NetworkInfo.State stateEthernet = null;
+            int statePppoe = -1;
+            try {
+                stateEthernet = mConnectivityManager.getNetworkInfo(
+                        ConnectivityManager.TYPE_ETHERNET).getState();
+                if (null != stateEthernet) {
+                    Log.v(LOGTAG, "Ethernet state = " + stateEthernet);
+                }
+            } catch (Exception e) {
+                Log.v(LOGTAG, "ConnectivityManager.getState TYPE_ETHERNET Exception!");
+            }
+            try {
+                statePppoe = mPppoeManager.getPppoeState();
+                Log.v(LOGTAG, "PPPoE state = " + statePppoe);
+            } catch (Exception e) {
+                Log.v(LOGTAG, "ConnectivityManager.getState TYPE_PPPOE Exception!");
+            }
+            String action = intent.getAction();
+            Log.i(LOGTAG, "Lan action: " + intent.getAction());
+            if (EthernetManager.ETHERNET_STATE_CHANGED_ACTION.equals(action)) {
+                // TODO
+            } else if (EthernetManager.NETWORK_STATE_CHANGED_ACTION.equals(action)) {
+                // TODO
+            } else if (PppoeManager.PPPOE_STATE_CHANGED_ACTION.equalsIgnoreCase(action)) {
+                Log.v(LOGTAG, "PPPOE_STATE=" + mPppoeManager.getPppoeState());
+                int extra = intent.getIntExtra(PppoeManager.EXTRA_PPPOE_STATE, -1);
+                Log.v(LOGTAG, "EXTRA_PPPOE_STATE=" + extra);
+                if (View.VISIBLE == mDialScene.getVisibility()) {
+                    mDialScene.pppoeStateChanged(intent);
+                }
+            }
+            if (null != stateEthernet && NetworkInfo.State.CONNECTED == stateEthernet) {
+                getIpInfo();
+                mMainScene.updateIpInfo();
+            }
+        }
+    };
+
+    private void registBR() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        intentFilter.addAction(PppoeManager.PPPOE_STATE_CHANGED_ACTION);
+        registerReceiver(mSystemBroadcastReceiver, intentFilter);
     }
 }
